@@ -155,8 +155,10 @@ const useGlassTheme = () => {
         },
         components: {
           Layout: {
-            headerBg: "##f5f5f5",
-            siderBg: "##f5f5f5",
+            headerBg: "#e0ecf1",
+            footerBg: "#e0ecf1",
+            siderBg: "#e0ecf1",
+            bodyBg: "#e0ecf1",
           },
         },
       },

@@ -1,6 +1,6 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { TypesPage } from "./pages/TypesPage";
+import { TypeWorkPage } from "./pages/TypeWorkPage";
 import { HomePage } from "./pages/HomePage";
 import { MainLayout } from "./theme/MainLayout";
 
@@ -10,7 +10,7 @@ function App() {
       <Routes>
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<TypesPage />} />
+          <Route path="/typeWork" element={<TypeWorkPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

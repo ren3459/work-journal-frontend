@@ -1,47 +1,164 @@
-import { Button, Card, Col, Row, Space, Statistic, Typography } from "antd";
+import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
+import type { TableProps } from "antd";
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Modal,
+  Row,
+  Select,
+  Space,
+  Statistic,
+  Table,
+  message,
+} from "antd";
+import { createJournalRecord, fetchJournalRecords } from "./HomePage.api";
+import type {
+  CreateJournalRecordPayload,
+  DataType,
+  JournalRecordResponse,
+} from "./HomePage.types";
+import { WorkJournalEntryForm } from "./WorkJournalEntryForm";
 import "./HomePage.css";
 
-const { Title, Paragraph, Text } = Typography;
+const DEFAULT_PAGE_SIZE = 5;
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
-const recentEntries = [
+const columns: TableProps<DataType>["columns"] = [
   {
-    id: 1,
-    title: "Планирование задач",
-    description: "Собрать приоритеты на день и отметить ключевые блокеры.",
+    title: "Тип работы",
+    dataIndex: "typeWork",
+    key: "typeWork",
   },
   {
-    id: 2,
-    title: "Рабочие заметки",
-    description: "Зафиксировать решения, идеи и важные договоренности.",
+    title: "Исполнитель",
+    dataIndex: "executorName",
+    key: "executorName",
   },
   {
-    id: 3,
-    title: "Итоги дня",
-    description: "Подвести результат и подготовить следующий шаг.",
+    title: "Объем",
+    dataIndex: "volume",
+    key: "volume",
+    render: (volume: DataType["volume"], record) =>
+      `${volume}${record.unit ? ` ${record.unit}` : ""}`,
+  },
+  {
+    title: "Дата создания",
+    dataIndex: "date",
+    key: "date",
+  },
+  {
+    title: "Комментарий",
+    dataIndex: "comment",
+    key: "comment",
   },
 ];
 
+const mapRecordToDataType = (
+  record: JournalRecordResponse,
+  index: number,
+): DataType => ({
+  key: String(record.key ?? record.id ?? index),
+  typeWork: record.typeWork ?? "",
+  executorName: record.executorName ?? "",
+  unit: record.unit ?? "",
+  volume: record.volume ?? 0,
+  date: record.date ?? "",
+  comment: record.comment ?? "",
+});
+
 export function HomePage() {
+  const [messageApi, contextHolder] = message.useMessage();
+  const [dataSource, setDataSource] = useState<DataType[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  //TODO: дописать сортировку после создания бекэнда
+  const loadJournalRecords = useCallback(
+    (signal?: AbortSignal) => {
+      fetchJournalRecords(page, pageSize, signal)
+        .then(({ data }) => {
+          setDataSource(data.items.map(mapRecordToDataType));
+          setTotal(data.total);
+          setPage((currentPage) =>
+            currentPage === data.page ? currentPage : data.page,
+          );
+          setError(null);
+        })
+        .catch((requestError) => {
+          if (axios.isCancel(requestError)) {
+            return;
+          }
+
+          setDataSource([]);
+          setTotal(0);
+          setError(
+            requestError instanceof Error
+              ? requestError.message
+              : "Не удалось загрузить записи журнала",
+          );
+        })
+        .finally(() => {
+          if (!signal?.aborted) {
+            setLoading(false);
+          }
+        });
+    },
+    [page, pageSize],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    loadJournalRecords(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [loadJournalRecords]);
+
+  const handleTableChange: TableProps<DataType>["onChange"] = (pagination) => {
+    setLoading(true);
+    setError(null);
+    setPage(pagination.current ?? 1);
+  };
+
+  const handlePageSizeChange = (nextPageSize: number) => {
+    setLoading(true);
+    setError(null);
+    setPage(1);
+    setPageSize(nextPageSize);
+  };
+
+  const handleCreateRecord = async (payload: CreateJournalRecordPayload) => {
+    setIsCreating(true);
+
+    try {
+      await createJournalRecord(payload);
+      setIsCreateModalOpen(false);
+      setLoading(true);
+      loadJournalRecords();
+      messageApi.success("Запись создана");
+    } catch (requestError) {
+      messageApi.error(
+        requestError instanceof Error
+          ? requestError.message
+          : "Не удалось создать запись",
+      );
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <div className="home-page">
-      <section className="home-page__hero">
-        <Space size={16}>
-          <Text className="home-page__eyebrow">Work Journal</Text>
-          <Title level={1} className="home-page__title">
-            Главная страница рабочего журнала
-          </Title>
-          <Paragraph className="home-page__description">
-            Быстрый обзор задач, заметок и прогресса за день.
-          </Paragraph>
-          <Space wrap>
-            <Button type="primary" size="large">
-              Добавить запись
-            </Button>
-            <Button size="large">Посмотреть журнал</Button>
-          </Space>
-        </Space>
-      </section>
-
+      {contextHolder}
       <Row gutter={[16, 16]} className="home-page__stats">
         <Col xs={24} sm={8}>
           <Card>
@@ -59,19 +176,64 @@ export function HomePage() {
           </Card>
         </Col>
       </Row>
-
-      <section className="home-page__entries">
-        <Title level={2}>Последние записи</Title>
-        <Row gutter={[16, 16]}>
-          {recentEntries.map((entry) => (
-            <Col xs={24} md={8} key={entry.id}>
-              <Card title={entry.title} className="home-page__entry-card">
-                <Paragraph>{entry.description}</Paragraph>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </section>
+      <div className="home-page__toolbar">
+        <Space size={16}>
+          <Button
+            type="primary"
+            size="large"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            Добавить запись
+          </Button>
+          <Button type="default" size="large" href="/typeWork">
+            Справочник работ
+          </Button>
+        </Space>
+        <Space size={8}>
+          <span>На странице</span>
+          <Select
+            value={pageSize}
+            options={PAGE_SIZE_OPTIONS.map((value) => ({
+              value,
+              label: value,
+            }))}
+            onChange={handlePageSizeChange}
+          />
+        </Space>
+      </div>
+      {error && (
+        <Alert
+          type="error"
+          message="Ошибка загрузки данных"
+          description={error}
+          showIcon
+        />
+      )}
+      <Table
+        dataSource={dataSource}
+        columns={columns}
+        loading={loading}
+        onChange={handleTableChange}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          showSizeChanger: false,
+        }}
+      />
+      <Modal
+        title="Создание записи"
+        open={isCreateModalOpen}
+        footer={null}
+        onCancel={() => setIsCreateModalOpen(false)}
+        destroyOnHidden
+      >
+        <WorkJournalEntryForm
+          isSubmitting={isCreating}
+          onCancel={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateRecord}
+        />
+      </Modal>
     </div>
   );
 }

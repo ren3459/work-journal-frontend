@@ -2,20 +2,14 @@
   width: 100%;
   max-width: 1920px;
   margin: 0 auto;
-  padding: 0;
-  text-align: left;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: var(--ant-padding, 16px);
 }
 
 .home-page__hero {
   padding: 32px;
   border-radius: 0;
-  background: linear-gradient(135deg, #f6f8fb 0%, #e9f3ef 100%);
-}
-
-.home-page__eyebrow {
-  color: #28745f;
-  font-weight: 700;
-  text-transform: uppercase;
 }
 
 .home-page__title {
@@ -29,23 +23,41 @@
   font-size: 18px;
 }
 
-.home-page__stats,
-.home-page__entries {
-  margin-top: 24px;
-  padding-inline: 0;
-}
-
 .home-page__entry-card {
   height: 100%;
 }
 
-@media (max-width: 768px) {
-  .home-page {
-    padding: 0;
-  }
+.home-page__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ant-padding, 16px);
+}
 
+.work-journal-entry-form {
+  display: grid;
+  gap: var(--ant-padding-sm, 12px);
+}
+
+.work-journal-entry-form__volume,
+.work-journal-entry-form__date {
+  width: 100%;
+}
+
+.work-journal-entry-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ant-padding-sm, 12px);
+}
+
+@media (max-width: 768px) {
   .home-page__hero {
     padding: 20px 16px;
+  }
+
+  .home-page__toolbar {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 

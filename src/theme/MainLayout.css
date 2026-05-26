@@ -58,17 +58,8 @@
     padding-inline: 0;
   }
 
-  .mainLayoutBody {
-    flex-direction: column;
-  }
-
   .siderStyle {
-    flex: 0 0 auto !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    max-height: none;
-    padding: var(--ant-padding-sm, 12px);
+    display: none;
   }
 
   .contentStyle {

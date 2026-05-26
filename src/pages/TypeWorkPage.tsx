@@ -1,11 +1,14 @@
-import { Card, Typography } from "antd";
+import { Button, Card, Typography } from "antd";
 
 const { Title, Paragraph } = Typography;
 
-export function TypesPage() {
+export function TypeWorkPage() {
   return (
     <Card>
       <Title level={1}>О проекте</Title>
+      <Button type="default" size="large" href="/">
+        Журнал работ
+      </Button>
       <Paragraph>
         Здесь можно описать назначение рабочего журнала, основные сценарии и
         правила ведения записей.
@@ -14,4 +17,4 @@ export function TypesPage() {
   );
 }
 
-export default TypesPage;
+export default TypeWorkPage;
