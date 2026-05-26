@@ -1,0 +1,56 @@
+.home-page {
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0;
+  text-align: left;
+}
+
+.home-page__hero {
+  padding: 32px;
+  border-radius: 0;
+  background: linear-gradient(135deg, #f6f8fb 0%, #e9f3ef 100%);
+}
+
+.home-page__eyebrow {
+  color: #28745f;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.home-page__title {
+  max-width: 720px;
+  margin: 0;
+}
+
+.home-page__description {
+  max-width: 560px;
+  margin: 0;
+  font-size: 18px;
+}
+
+.home-page__stats,
+.home-page__entries {
+  margin-top: 24px;
+  padding-inline: 0;
+}
+
+.home-page__entry-card {
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  .home-page {
+    padding: 0;
+  }
+
+  .home-page__hero {
+    padding: 20px 16px;
+  }
+}
+
+@media (min-width: 1921px) {
+  .home-page__hero {
+    border-radius: 12px;
+  }
+}
