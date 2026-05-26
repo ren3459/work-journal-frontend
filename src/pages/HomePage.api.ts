@@ -4,14 +4,11 @@ import type {
   JournalRecordResponse,
   JournalRecordsResponse,
   WorkTypeResponse,
-  WorkTypesResponse,
 } from "./HomePage.types";
 
-//TODO: переписать url на нормальный и дописать хвост
-const workJournalApiUrl =
-  import.meta.env.VITE_WORK_JOURNAL_API_URL ?? "/api/work-journal";
-const workTypesApiUrl =
-  import.meta.env.VITE_WORK_TYPES_API_URL ?? "/api/work-types";
+const apiBaseUrl = import.meta.env.VITE_API_URL ?? "/api";
+const workJournalApiUrl = `${apiBaseUrl}/work-journal`;
+const workTypesApiUrl = `${apiBaseUrl}/work-types`;
 
 export const fetchJournalRecords = (
   page: number,
@@ -30,6 +27,6 @@ export const createJournalRecord = (payload: CreateJournalRecordPayload) =>
   axios.post<JournalRecordResponse>(workJournalApiUrl, payload);
 
 export const fetchWorkTypes = (signal?: AbortSignal) =>
-  axios.get<WorkTypeResponse[] | WorkTypesResponse>(workTypesApiUrl, {
+  axios.get<WorkTypeResponse[]>(workTypesApiUrl, {
     signal,
   });

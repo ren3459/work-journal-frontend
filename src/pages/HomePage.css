@@ -7,26 +7,6 @@
   gap: var(--ant-padding, 16px);
 }
 
-.home-page__hero {
-  padding: 32px;
-  border-radius: 0;
-}
-
-.home-page__title {
-  max-width: 720px;
-  margin: 0;
-}
-
-.home-page__description {
-  max-width: 560px;
-  margin: 0;
-  font-size: 18px;
-}
-
-.home-page__entry-card {
-  height: 100%;
-}
-
 .home-page__toolbar {
   display: flex;
   align-items: center;
@@ -51,18 +31,8 @@
 }
 
 @media (max-width: 768px) {
-  .home-page__hero {
-    padding: 20px 16px;
-  }
-
   .home-page__toolbar {
     align-items: flex-start;
     flex-direction: column;
-  }
-}
-
-@media (min-width: 1921px) {
-  .home-page__hero {
-    border-radius: 12px;
   }
 }

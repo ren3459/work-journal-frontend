@@ -16,7 +16,6 @@ import { fetchWorkTypes } from "./HomePage.api";
 import type {
   CreateJournalRecordPayload,
   WorkTypeResponse,
-  WorkTypesResponse,
 } from "./HomePage.types";
 
 type WorkJournalEntryFormValues = Omit<CreateJournalRecordPayload, "date"> & {
@@ -30,25 +29,12 @@ interface WorkJournalEntryFormProps {
 }
 
 const initialValues: WorkJournalEntryFormValues = {
-  typeWork: "",
+  workTypeId: 0,
   executorName: "",
   unit: "",
   volume: 0,
   date: dayjs(),
   comment: "",
-};
-
-const getWorkTypeName = (workType: WorkTypeResponse) =>
-  workType.name ?? workType.typeWork ?? workType.title ?? "";
-
-const getWorkTypesItems = (
-  response: WorkTypeResponse[] | WorkTypesResponse,
-) => {
-  if (Array.isArray(response)) {
-    return response;
-  }
-
-  return response.items ?? [];
 };
 
 export function WorkJournalEntryForm({
@@ -73,7 +59,7 @@ export function WorkJournalEntryForm({
 
     fetchWorkTypes(controller.signal)
       .then(({ data }) => {
-        setWorkTypes(getWorkTypesItems(data));
+        setWorkTypes(data);
         setWorkTypesError(null);
       })
       .catch((requestError) => {
@@ -101,17 +87,10 @@ export function WorkJournalEntryForm({
 
   const workTypeOptions = useMemo(
     () =>
-      workTypes
-        .map((workType) => {
-          const name = getWorkTypeName(workType);
-
-          return {
-            value: name,
-            label: name,
-            key: String(workType.key ?? workType.id ?? name),
-          };
-        })
-        .filter((option) => option.value),
+      workTypes.map((workType) => ({
+        value: workType.id,
+        label: workType.name,
+      })),
     [workTypes],
   );
 
@@ -119,6 +98,7 @@ export function WorkJournalEntryForm({
     await onSubmit({
       ...values,
       date: values.date?.format("YYYY-MM-DD") ?? "",
+      comment: values.comment || undefined,
     });
     reset(initialValues);
   });
@@ -134,16 +114,16 @@ export function WorkJournalEntryForm({
         />
       )}
       <Controller
-        name="typeWork"
+        name="workTypeId"
         control={control}
-        rules={{ required: "Укажите тип работы" }}
+        rules={{ validate: (value) => value > 0 || "Укажите тип работы" }}
         render={({ field }) => (
           <Select
             {...field}
             showSearch
             loading={isWorkTypesLoading}
             disabled={isWorkTypesLoading || Boolean(workTypesError)}
-            status={errors.typeWork ? "error" : ""}
+            status={errors.workTypeId ? "error" : ""}
             placeholder="Тип работы"
             optionFilterProp="label"
             options={workTypeOptions}

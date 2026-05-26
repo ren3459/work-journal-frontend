@@ -8,12 +8,13 @@
   flex: 0 0 auto;
   text-align: center;
   padding-inline: 0;
-  line-height: 64px;
 }
 
 .headerStyle .ant-typography {
+  color: var(--ant-layout-color-bg-body);
   margin: 0;
   line-height: 64px;
+  font-size: 48px;
 }
 
 .mainLayoutBody {
@@ -22,22 +23,10 @@
   width: 100%;
   max-width: 1920px;
   margin-inline: auto;
-  padding-inline: clamp(
-    var(--ant-padding-sm, 12px),
-    3vw,
-    var(--ant-padding-lg, 24px)
-  );
+  padding-inline: clamp(var(--ant-padding-sm, 12px),
+      3vw,
+      var(--ant-padding-lg, 24px));
   box-sizing: border-box;
-}
-
-.siderStyle {
-  flex: 0 0 clamp(220px, 15vw, 300px) !important;
-  width: clamp(220px, 15vw, 300px) !important;
-  min-width: 220px !important;
-  max-width: 300px !important;
-  padding: var(--ant-padding, 16px);
-  text-align: center;
-  overflow-y: auto;
 }
 
 .contentStyle {
@@ -56,10 +45,6 @@
 @media (max-width: 768px) {
   .headerStyle {
     padding-inline: 0;
-  }
-
-  .siderStyle {
-    display: none;
   }
 
   .contentStyle {

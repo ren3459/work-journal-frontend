@@ -56,16 +56,13 @@ const columns: TableProps<DataType>["columns"] = [
   },
 ];
 
-const mapRecordToDataType = (
-  record: JournalRecordResponse,
-  index: number,
-): DataType => ({
-  key: String(record.key ?? record.id ?? index),
-  typeWork: record.typeWork ?? "",
-  executorName: record.executorName ?? "",
-  unit: record.unit ?? "",
-  volume: record.volume ?? 0,
-  date: record.date ?? "",
+const mapRecordToDataType = (record: JournalRecordResponse): DataType => ({
+  key: String(record.id),
+  typeWork: record.workType.name,
+  executorName: record.executorName,
+  unit: record.unit,
+  volume: record.volume,
+  date: record.date,
   comment: record.comment ?? "",
 });
 

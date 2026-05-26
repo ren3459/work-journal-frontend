@@ -8,9 +8,23 @@ export interface DataType {
   comment: string;
 }
 
-export interface JournalRecordResponse extends Partial<Omit<DataType, "key">> {
-  id?: string | number;
-  key?: string | number;
+export interface WorkTypeResponse {
+  id: number;
+  name: string;
+  createdAt: string;
+}
+
+export interface JournalRecordResponse {
+  id: number;
+  date: string;
+  volume: number;
+  unit: string;
+  executorName: string;
+  comment: string | null;
+  workTypeId: number;
+  workType: WorkTypeResponse;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface JournalRecordsResponse {
@@ -20,22 +34,10 @@ export interface JournalRecordsResponse {
 }
 
 export interface CreateJournalRecordPayload {
-  typeWork: string;
+  workTypeId: number;
   executorName: string;
   unit: string;
   volume: number;
   date: string;
-  comment: string;
-}
-
-export interface WorkTypeResponse {
-  id?: string | number;
-  key?: string | number;
-  name?: string;
-  title?: string;
-  typeWork?: string;
-}
-
-export interface WorkTypesResponse {
-  items: WorkTypeResponse[];
+  comment?: string;
 }
