@@ -5,6 +5,7 @@
   display: grid;
   grid-template-rows: auto auto 1fr;
   gap: var(--ant-padding, 16px);
+  padding: var(--ant-padding, 16px) 0;
 }
 
 .home-page__toolbar {
@@ -24,6 +25,12 @@
   width: 100%;
 }
 
+.work-journal-entry-form__dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ant-padding-sm, 12px);
+}
+
 .work-journal-entry-form__actions {
   display: flex;
   justify-content: flex-end;
@@ -34,5 +41,9 @@
   .home-page__toolbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .work-journal-entry-form__dates {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
+import dayjs from "dayjs";
 import type { TableProps } from "antd";
 import {
   Alert,
@@ -12,6 +13,7 @@ import {
   Space,
   Statistic,
   Table,
+  Tag,
   message,
 } from "antd";
 import { createJournalRecord, fetchJournalRecords } from "./HomePage.api";
@@ -26,28 +28,53 @@ import "./HomePage.css";
 const DEFAULT_PAGE_SIZE = 5;
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
+const formatDate = (date?: string | null) =>
+  date ? dayjs(date).format("DD.MM.YYYY") : "";
+
 const columns: TableProps<DataType>["columns"] = [
   {
     title: "Тип работы",
     dataIndex: "typeWork",
     key: "typeWork",
+    sorter: true,
   },
   {
     title: "Исполнитель",
     dataIndex: "executorName",
     key: "executorName",
+    sorter: true,
   },
   {
     title: "Объем",
     dataIndex: "volume",
     key: "volume",
+    sorter: true,
     render: (volume: DataType["volume"], record) =>
       `${volume}${record.unit ? ` ${record.unit}` : ""}`,
   },
   {
-    title: "Дата создания",
+    title: "Дата работы",
     dataIndex: "date",
     key: "date",
+    sorter: true,
+  },
+  {
+    title: "Дата выполнения",
+    dataIndex: "completedAt",
+    key: "completedAt",
+    sorter: true,
+    render: (completedAt: DataType["completedAt"]) => completedAt || "-",
+  },
+  {
+    title: "Статус",
+    dataIndex: "isCompleted",
+    key: "status",
+    sorter: true,
+    render: (isCompleted: DataType["isCompleted"]) => (
+      <Tag color={isCompleted ? "success" : "error"}>
+        {isCompleted ? "Выполнено" : "Не выполнено"}
+      </Tag>
+    ),
   },
   {
     title: "Комментарий",
@@ -62,24 +89,44 @@ const mapRecordToDataType = (record: JournalRecordResponse): DataType => ({
   executorName: record.executorName,
   unit: record.unit,
   volume: record.volume,
-  date: record.date,
+  date: formatDate(record.date),
+  completedAt: formatDate(record.completedAt),
+  isCompleted: Boolean(record.completedAt),
   comment: record.comment ?? "",
 });
+
+const getSortOrder = (
+  sorter: Parameters<NonNullable<TableProps<DataType>["onChange"]>>[2],
+) => {
+  if (Array.isArray(sorter)) {
+    return {
+      sortField: sorter[0]?.field?.toString(),
+      sortOrder: sorter[0]?.order ?? undefined,
+    };
+  }
+
+  return {
+    sortField: sorter.field?.toString(),
+    sortOrder: sorter.order ?? undefined,
+  };
+};
 
 export function HomePage() {
   const [messageApi, contextHolder] = message.useMessage();
   const [dataSource, setDataSource] = useState<DataType[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [sortField, setSortField] = useState<string | undefined>();
+  const [sortOrder, setSortOrder] = useState<string | undefined>();
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  //TODO: дописать сортировку после создания бекэнда
+
   const loadJournalRecords = useCallback(
     (signal?: AbortSignal) => {
-      fetchJournalRecords(page, pageSize, signal)
+      fetchJournalRecords(page, pageSize, sortField, sortOrder, signal)
         .then(({ data }) => {
           setDataSource(data.items.map(mapRecordToDataType));
           setTotal(data.total);
@@ -107,7 +154,7 @@ export function HomePage() {
           }
         });
     },
-    [page, pageSize],
+    [page, pageSize, sortField, sortOrder],
   );
 
   useEffect(() => {
@@ -120,10 +167,18 @@ export function HomePage() {
     };
   }, [loadJournalRecords]);
 
-  const handleTableChange: TableProps<DataType>["onChange"] = (pagination) => {
+  const handleTableChange: TableProps<DataType>["onChange"] = (
+    pagination,
+    _filters,
+    sorter,
+  ) => {
+    const nextSort = getSortOrder(sorter);
+
     setLoading(true);
     setError(null);
     setPage(pagination.current ?? 1);
+    setSortField(nextSort.sortField);
+    setSortOrder(nextSort.sortOrder);
   };
 
   const handlePageSizeChange = (nextPageSize: number) => {
@@ -201,7 +256,7 @@ export function HomePage() {
       {error && (
         <Alert
           type="error"
-          message="Ошибка загрузки данных"
+          title="Ошибка загрузки данных"
           description={error}
           showIcon
         />

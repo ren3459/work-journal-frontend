@@ -5,6 +5,8 @@ export interface DataType {
   unit: string;
   volume: number;
   date: string;
+  completedAt: string;
+  isCompleted: boolean;
   comment: string;
 }
 
@@ -17,6 +19,7 @@ export interface WorkTypeResponse {
 export interface JournalRecordResponse {
   id: number;
   date: string;
+  completedAt: string | null;
   volume: number;
   unit: string;
   executorName: string;
@@ -39,5 +42,6 @@ export interface CreateJournalRecordPayload {
   unit: string;
   volume: number;
   date: string;
+  completedAt?: string;
   comment?: string;
 }

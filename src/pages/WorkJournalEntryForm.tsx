@@ -18,8 +18,13 @@ import type {
   WorkTypeResponse,
 } from "./HomePage.types";
 
-type WorkJournalEntryFormValues = Omit<CreateJournalRecordPayload, "date"> & {
+type WorkJournalEntryFormValues = Omit<
+  CreateJournalRecordPayload,
+  "workTypeId" | "date" | "completedAt"
+> & {
+  workTypeId: number | undefined;
   date: Dayjs | null;
+  completedAt: Dayjs | null;
 };
 
 interface WorkJournalEntryFormProps {
@@ -29,11 +34,12 @@ interface WorkJournalEntryFormProps {
 }
 
 const initialValues: WorkJournalEntryFormValues = {
-  workTypeId: 0,
+  workTypeId: undefined,
   executorName: "",
   unit: "",
   volume: 0,
   date: dayjs(),
+  completedAt: null,
   comment: "",
 };
 
@@ -95,9 +101,15 @@ export function WorkJournalEntryForm({
   );
 
   const submitForm = handleSubmit(async (values) => {
+    if (!values.workTypeId) {
+      return;
+    }
+
     await onSubmit({
       ...values,
+      workTypeId: values.workTypeId,
       date: values.date?.format("YYYY-MM-DD") ?? "",
+      completedAt: values.completedAt?.format("YYYY-MM-DD") || undefined,
       comment: values.comment || undefined,
     });
     reset(initialValues);
@@ -108,7 +120,7 @@ export function WorkJournalEntryForm({
       {workTypesError && (
         <Alert
           type="error"
-          message="Ошибка загрузки справочника работ"
+          title="Ошибка загрузки справочника работ"
           description={workTypesError}
           showIcon
         />
@@ -116,16 +128,15 @@ export function WorkJournalEntryForm({
       <Controller
         name="workTypeId"
         control={control}
-        rules={{ validate: (value) => value > 0 || "Укажите тип работы" }}
+        rules={{ validate: (value) => Boolean(value) || "Укажите тип работы" }}
         render={({ field }) => (
           <Select
             {...field}
-            showSearch
+            showSearch={{ optionFilterProp: "label" }}
             loading={isWorkTypesLoading}
             disabled={isWorkTypesLoading || Boolean(workTypesError)}
             status={errors.workTypeId ? "error" : ""}
             placeholder="Тип работы"
-            optionFilterProp="label"
             options={workTypeOptions}
           />
         )}
@@ -169,19 +180,34 @@ export function WorkJournalEntryForm({
           )}
         />
       </Space.Compact>
-      <Controller
-        name="date"
-        control={control}
-        rules={{ required: "Укажите дату" }}
-        render={({ field }) => (
-          <DatePicker
-            {...field}
-            className="work-journal-entry-form__date"
-            status={errors.date ? "error" : ""}
-            format="DD.MM.YYYY"
-          />
-        )}
-      />
+      <div className="work-journal-entry-form__dates">
+        <Controller
+          name="date"
+          control={control}
+          rules={{ required: "Укажите дату работы" }}
+          render={({ field }) => (
+            <DatePicker
+              {...field}
+              className="work-journal-entry-form__date"
+              status={errors.date ? "error" : ""}
+              format="DD.MM.YYYY"
+              placeholder="Дата работы"
+            />
+          )}
+        />
+        <Controller
+          name="completedAt"
+          control={control}
+          render={({ field }) => (
+            <DatePicker
+              {...field}
+              className="work-journal-entry-form__date"
+              format="DD.MM.YYYY"
+              placeholder="Дата выполнения"
+            />
+          )}
+        />
+      </div>
       <Controller
         name="comment"
         control={control}

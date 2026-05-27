@@ -13,12 +13,16 @@ const workTypesApiUrl = `${apiBaseUrl}/work-types`;
 export const fetchJournalRecords = (
   page: number,
   pageSize: number,
+  sortField?: string,
+  sortOrder?: string,
   signal?: AbortSignal,
 ) =>
   axios.get<JournalRecordsResponse>(workJournalApiUrl, {
     params: {
       page,
       pageSize,
+      sortField,
+      sortOrder,
     },
     signal,
   });
@@ -30,3 +34,6 @@ export const fetchWorkTypes = (signal?: AbortSignal) =>
   axios.get<WorkTypeResponse[]>(workTypesApiUrl, {
     signal,
   });
+
+export const createWorkType = (name: string) =>
+  axios.post<WorkTypeResponse>(workTypesApiUrl, { name });
