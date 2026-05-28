@@ -9,14 +9,17 @@ import {
   InputNumber,
   Select,
   Space,
+  Spin,
 } from "antd";
 import dayjs from "dayjs";
 import type { Dayjs } from "dayjs";
-import { fetchWorkById, fetchWorkTypes } from "./HomePage.api";
+import { fetchWorkTypes } from "./HomePage.api";
 import type {
   CreateJournalRecordPayload,
+  JournalRecordResponse,
   WorkTypeResponse,
 } from "./HomePage.types";
+import "./WorkJournalEntryForm.css";
 
 type WorkJournalEntryFormValues = Omit<
   CreateJournalRecordPayload,
@@ -29,7 +32,8 @@ type WorkJournalEntryFormValues = Omit<
 
 interface WorkJournalEntryFormProps {
   isSubmitting: boolean;
-  editId?: string;
+  editData?: JournalRecordResponse;
+  isLoading: boolean;
   onCancel: () => void;
   onSubmit: (payload: CreateJournalRecordPayload) => Promise<void>;
 }
@@ -44,8 +48,21 @@ const initialValues: WorkJournalEntryFormValues = {
   comment: "",
 };
 
+const mapRecordToFormValues = (
+  record: JournalRecordResponse,
+): WorkJournalEntryFormValues => ({
+  workTypeId: record.workTypeId,
+  executorName: record.executorName,
+  unit: record.unit,
+  volume: record.volume,
+  date: dayjs(record.date),
+  completedAt: record.completedAt ? dayjs(record.completedAt) : null,
+  comment: record.comment ?? "",
+});
+
 export function WorkJournalEntryForm({
-  editId = undefined,
+  editData = undefined,
+  isLoading = false,
   isSubmitting,
   onCancel,
   onSubmit,
@@ -61,6 +78,10 @@ export function WorkJournalEntryForm({
   } = useForm<WorkJournalEntryFormValues>({
     defaultValues: initialValues,
   });
+
+  useEffect(() => {
+    reset(editData ? mapRecordToFormValues(editData) : initialValues);
+  }, [editData, reset]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -88,13 +109,10 @@ export function WorkJournalEntryForm({
         }
       });
 
-    if (editId) {
-      fetchWorkById(editId, controller.signal);
-    }
     return () => {
       controller.abort();
     };
-  }, [editId]);
+  }, []);
 
   const workTypeOptions = useMemo(
     () =>
@@ -120,6 +138,14 @@ export function WorkJournalEntryForm({
     reset(initialValues);
   });
 
+  if (isLoading) {
+    return (
+      <div className="work-journal-entry-form__loader">
+        <Spin />
+      </div>
+    );
+  }
+
   return (
     <form className="work-journal-entry-form" onSubmit={submitForm}>
       {workTypesError && (
@@ -133,7 +159,9 @@ export function WorkJournalEntryForm({
       <Controller
         name="workTypeId"
         control={control}
-        rules={{ validate: (value) => Boolean(value) || "Укажите тип работы" }}
+        rules={{
+          validate: (value) => Boolean(value) || "Укажите тип работы",
+        }}
         render={({ field }) => (
           <Select
             {...field}
@@ -222,7 +250,7 @@ export function WorkJournalEntryForm({
       />
       <div className="work-journal-entry-form__actions">
         <Button onClick={onCancel}>Отмена</Button>
-        {editId ? (
+        {editData ? (
           <>
             <Button color="orange" variant="solid" loading={isSubmitting}>
               Изменить

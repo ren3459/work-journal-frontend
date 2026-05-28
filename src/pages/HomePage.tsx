@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import type { TableProps } from "antd";
@@ -17,7 +17,11 @@ import {
   Tooltip,
   message,
 } from "antd";
-import { createJournalRecord, fetchJournalRecords } from "./HomePage.api";
+import {
+  createJournalRecord,
+  fetchJournalRecords,
+  fetchWorkById,
+} from "./HomePage.api";
 import type {
   CreateJournalRecordPayload,
   DataType,
@@ -75,26 +79,34 @@ export function HomePage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editId, setEditId] = useState<string | undefined>();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editData, setEditData] = useState<JournalRecordResponse | undefined>();
+  const [isLoadingWork, setIsLoadingWork] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+
+  const journalStats = useMemo(() => {
+    const today = dayjs().format("DD.MM.YYYY");
+
+    return {
+      completedToday: dataSource.filter(
+        (record) => record.completedAt === today,
+      ).length,
+      remaining: dataSource.filter((record) => !record.isCompleted).length,
+    };
+  }, [dataSource]);
 
   const columns: TableProps<DataType>["columns"] = [
     {
       title: "Действия",
       dataIndex: "actions",
       key: "actions",
-      render: (id: DataType["volume"]) => (
+      render: (_: unknown, record: DataType) => (
         <Tooltip title="Открыть запись">
           <Button
             type="default"
             shape="circle"
             icon={<InfoOutlined />}
-            onClick={() => {
-              console.log(id);
-
-              setEditId(id);
-            }}
+            onClick={() => handleEditWorkModal(record.key)}
           />
         </Tooltip>
       ),
@@ -197,6 +209,18 @@ export function HomePage() {
     };
   }, [loadJournalRecords]);
 
+  const handleEditWorkModal = async (id: string) => {
+    setIsModalOpen(true);
+    setIsLoadingWork(true);
+
+    try {
+      const { data: work } = await fetchWorkById(id);
+      setEditData(work);
+    } finally {
+      setIsLoadingWork(false);
+    }
+  };
+
   const handleTableChange: TableProps<DataType>["onChange"] = (
     pagination,
     _filters,
@@ -223,7 +247,7 @@ export function HomePage() {
 
     try {
       await createJournalRecord(payload);
-      setIsCreateModalOpen(false);
+      setIsModalOpen(false);
       setLoading(true);
       loadJournalRecords();
       messageApi.success("Запись создана");
@@ -242,19 +266,20 @@ export function HomePage() {
     <div className="home-page">
       {contextHolder}
       <Row gutter={[16, 16]} className="home-page__stats">
-        <Col xs={24} sm={8}>
+        <Col xs={24} sm={12}>
           <Card>
-            <Statistic title="Задачи сегодня" value={8} />
+            <Statistic
+              title="Выполнено сегодня"
+              value={journalStats.completedToday}
+            />
           </Card>
         </Col>
-        <Col xs={24} sm={8}>
+        <Col xs={24} sm={12}>
           <Card>
-            <Statistic title="Выполнено" value={5} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card>
-            <Statistic title="Заметки" value={12} />
+            <Statistic
+              title="Осталось выполнить задач"
+              value={journalStats.remaining}
+            />
           </Card>
         </Col>
       </Row>
@@ -263,7 +288,7 @@ export function HomePage() {
           <Button
             type="primary"
             size="large"
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => setIsModalOpen(true)}
           >
             Добавить запись
           </Button>
@@ -305,20 +330,21 @@ export function HomePage() {
       />
       <Modal
         title="Создание записи"
-        open={isCreateModalOpen || !!editId}
+        open={isModalOpen}
         footer={null}
         onCancel={() => {
-          setIsCreateModalOpen(false);
-          setEditId(undefined);
+          setIsModalOpen(false);
+          setEditData(undefined);
         }}
         destroyOnHidden
       >
         <WorkJournalEntryForm
-          editId={editId}
+          editData={editData}
+          isLoading={isLoadingWork}
           isSubmitting={isCreating}
           onCancel={() => {
-            setIsCreateModalOpen(false);
-            setEditId(undefined);
+            setIsModalOpen(false);
+            setEditData(undefined);
           }}
           onSubmit={handleCreateRecord}
         />

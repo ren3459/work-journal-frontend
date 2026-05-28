@@ -1,0 +1,34 @@
+.work-journal-entry-form {
+  display: grid;
+  gap: var(--ant-padding-sm, 12px);
+}
+
+.work-journal-entry-form__loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 10vh;
+}
+
+.work-journal-entry-form__volume,
+.work-journal-entry-form__date {
+  width: 100%;
+}
+
+.work-journal-entry-form__dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ant-padding-sm, 12px);
+}
+
+.work-journal-entry-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ant-padding-sm, 12px);
+}
+
+@media (max-width: 768px) {
+  .work-journal-entry-form__dates {
+    grid-template-columns: 1fr;
+  }
+}

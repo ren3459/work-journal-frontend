@@ -16,7 +16,7 @@ import {
 import Title from "antd/es/typography/Title";
 import { createWorkType, fetchWorkTypes } from "./HomePage.api";
 import type { WorkTypeResponse } from "./HomePage.types";
-import "./HomePage.css";
+import "./TypeWorkPage.css";
 
 const DEFAULT_PAGE_SIZE = 5;
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
@@ -139,12 +139,10 @@ export function TypeWorkPage() {
   };
 
   return (
-    <div className="home-page">
+    <div className="type-work-page">
       {contextHolder}
-      <Title level={2} className="home-page__title">
-        Справочник типов работ
-      </Title>
-      <div className="home-page__toolbar">
+      <Title level={2}>Справочник типов работ</Title>
+      <div className="type-work-page__toolbar">
         <Space size={16}>
           <Button
             type="primary"
@@ -215,7 +213,7 @@ export function TypeWorkPage() {
           >
             <Input placeholder="Тип работы" />
           </Form.Item>
-          <div className="work-journal-entry-form__actions">
+          <div className="type-work-page__modal-actions">
             <Button onClick={() => setIsCreateModalOpen(false)}>Отмена</Button>
             <Button type="primary" htmlType="submit" loading={isCreating}>
               Создать

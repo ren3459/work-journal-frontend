@@ -27,16 +27,18 @@ export const fetchJournalRecords = (
     signal,
   });
 
+//jornal url
 export const createJournalRecord = (payload: CreateJournalRecordPayload) =>
   axios.post<JournalRecordResponse>(workJournalApiUrl, payload);
 
-export const fetchWorkTypes = (signal?: AbortSignal) =>
-  axios.get<WorkTypeResponse[]>(workTypesApiUrl, {
+export const fetchWorkById = (id: string, signal?: AbortSignal) =>
+  axios.get<JournalRecordResponse>(workJournalApiUrl + `/${id}`, {
     signal,
   });
 
-export const fetchWorkById = (id: string, signal?: AbortSignal) =>
-  axios.get<WorkTypeResponse[]>(workTypesApiUrl + `/${id}`, {
+//types url
+export const fetchWorkTypes = (signal?: AbortSignal) =>
+  axios.get<WorkTypeResponse[]>(workTypesApiUrl, {
     signal,
   });
 
