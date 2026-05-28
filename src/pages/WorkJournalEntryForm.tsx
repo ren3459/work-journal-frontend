@@ -12,7 +12,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import type { Dayjs } from "dayjs";
-import { fetchWorkTypes } from "./HomePage.api";
+import { fetchWorkById, fetchWorkTypes } from "./HomePage.api";
 import type {
   CreateJournalRecordPayload,
   WorkTypeResponse,
@@ -29,6 +29,7 @@ type WorkJournalEntryFormValues = Omit<
 
 interface WorkJournalEntryFormProps {
   isSubmitting: boolean;
+  editId?: string;
   onCancel: () => void;
   onSubmit: (payload: CreateJournalRecordPayload) => Promise<void>;
 }
@@ -44,6 +45,7 @@ const initialValues: WorkJournalEntryFormValues = {
 };
 
 export function WorkJournalEntryForm({
+  editId = undefined,
   isSubmitting,
   onCancel,
   onSubmit,
@@ -86,10 +88,13 @@ export function WorkJournalEntryForm({
         }
       });
 
+    if (editId) {
+      fetchWorkById(editId, controller.signal);
+    }
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [editId]);
 
   const workTypeOptions = useMemo(
     () =>
@@ -217,9 +222,20 @@ export function WorkJournalEntryForm({
       />
       <div className="work-journal-entry-form__actions">
         <Button onClick={onCancel}>Отмена</Button>
-        <Button type="primary" htmlType="submit" loading={isSubmitting}>
-          Создать
-        </Button>
+        {editId ? (
+          <>
+            <Button color="orange" variant="solid" loading={isSubmitting}>
+              Изменить
+            </Button>
+            <Button color="danger" variant="solid" loading={isSubmitting}>
+              Удалить
+            </Button>
+          </>
+        ) : (
+          <Button type="primary" htmlType="submit" loading={isSubmitting}>
+            Создать
+          </Button>
+        )}
       </div>
     </form>
   );

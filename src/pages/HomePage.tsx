@@ -14,6 +14,7 @@ import {
   Statistic,
   Table,
   Tag,
+  Tooltip,
   message,
 } from "antd";
 import { createJournalRecord, fetchJournalRecords } from "./HomePage.api";
@@ -24,64 +25,17 @@ import type {
 } from "./HomePage.types";
 import { WorkJournalEntryForm } from "./WorkJournalEntryForm";
 import "./HomePage.css";
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  InfoOutlined,
+} from "@ant-design/icons";
 
 const DEFAULT_PAGE_SIZE = 5;
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
 const formatDate = (date?: string | null) =>
   date ? dayjs(date).format("DD.MM.YYYY") : "";
-
-const columns: TableProps<DataType>["columns"] = [
-  {
-    title: "Тип работы",
-    dataIndex: "typeWork",
-    key: "typeWork",
-    sorter: true,
-  },
-  {
-    title: "Исполнитель",
-    dataIndex: "executorName",
-    key: "executorName",
-    sorter: true,
-  },
-  {
-    title: "Объем",
-    dataIndex: "volume",
-    key: "volume",
-    sorter: true,
-    render: (volume: DataType["volume"], record) =>
-      `${volume}${record.unit ? ` ${record.unit}` : ""}`,
-  },
-  {
-    title: "Дата работы",
-    dataIndex: "date",
-    key: "date",
-    sorter: true,
-  },
-  {
-    title: "Дата выполнения",
-    dataIndex: "completedAt",
-    key: "completedAt",
-    sorter: true,
-    render: (completedAt: DataType["completedAt"]) => completedAt || "-",
-  },
-  {
-    title: "Статус",
-    dataIndex: "isCompleted",
-    key: "status",
-    sorter: true,
-    render: (isCompleted: DataType["isCompleted"]) => (
-      <Tag color={isCompleted ? "success" : "error"}>
-        {isCompleted ? "Выполнено" : "Не выполнено"}
-      </Tag>
-    ),
-  },
-  {
-    title: "Комментарий",
-    dataIndex: "comment",
-    key: "comment",
-  },
-];
 
 const mapRecordToDataType = (record: JournalRecordResponse): DataType => ({
   key: String(record.id),
@@ -122,7 +76,83 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | undefined>();
   const [isCreating, setIsCreating] = useState(false);
+
+  const columns: TableProps<DataType>["columns"] = [
+    {
+      title: "Действия",
+      dataIndex: "actions",
+      key: "actions",
+      render: (id: DataType["volume"]) => (
+        <Tooltip title="Открыть запись">
+          <Button
+            type="default"
+            shape="circle"
+            icon={<InfoOutlined />}
+            onClick={() => {
+              console.log(id);
+
+              setEditId(id);
+            }}
+          />
+        </Tooltip>
+      ),
+    },
+    {
+      title: "Тип работы",
+      dataIndex: "typeWork",
+      key: "typeWork",
+      sorter: true,
+    },
+    {
+      title: "Исполнитель",
+      dataIndex: "executorName",
+      key: "executorName",
+      sorter: true,
+    },
+    {
+      title: "Объем",
+      dataIndex: "volume",
+      key: "volume",
+      sorter: true,
+      render: (volume: DataType["volume"], record) =>
+        `${volume}${record.unit ? ` ${record.unit}` : ""}`,
+    },
+    {
+      title: "Дата работы",
+      dataIndex: "date",
+      key: "date",
+      sorter: true,
+    },
+    {
+      title: "Дата выполнения",
+      dataIndex: "completedAt",
+      key: "completedAt",
+      sorter: true,
+      render: (completedAt: DataType["completedAt"]) => completedAt || "-",
+    },
+    {
+      title: "Статус",
+      dataIndex: "isCompleted",
+      key: "status",
+      sorter: true,
+      render: (isCompleted: DataType["isCompleted"]) => (
+        <Tag
+          variant="solid"
+          color={isCompleted ? "success" : "error"}
+          icon={isCompleted ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+        >
+          {isCompleted ? "Выполнено" : "Не выполнено"}
+        </Tag>
+      ),
+    },
+    {
+      title: "Комментарий",
+      dataIndex: "comment",
+      key: "comment",
+    },
+  ];
 
   const loadJournalRecords = useCallback(
     (signal?: AbortSignal) => {
@@ -275,14 +305,21 @@ export function HomePage() {
       />
       <Modal
         title="Создание записи"
-        open={isCreateModalOpen}
+        open={isCreateModalOpen || !!editId}
         footer={null}
-        onCancel={() => setIsCreateModalOpen(false)}
+        onCancel={() => {
+          setIsCreateModalOpen(false);
+          setEditId(undefined);
+        }}
         destroyOnHidden
       >
         <WorkJournalEntryForm
+          editId={editId}
           isSubmitting={isCreating}
-          onCancel={() => setIsCreateModalOpen(false)}
+          onCancel={() => {
+            setIsCreateModalOpen(false);
+            setEditId(undefined);
+          }}
           onSubmit={handleCreateRecord}
         />
       </Modal>

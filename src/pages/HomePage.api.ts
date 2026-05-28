@@ -35,5 +35,10 @@ export const fetchWorkTypes = (signal?: AbortSignal) =>
     signal,
   });
 
+export const fetchWorkById = (id: string, signal?: AbortSignal) =>
+  axios.get<WorkTypeResponse[]>(workTypesApiUrl + `/${id}`, {
+    signal,
+  });
+
 export const createWorkType = (name: string) =>
   axios.post<WorkTypeResponse>(workTypesApiUrl, { name });
