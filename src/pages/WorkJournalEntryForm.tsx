@@ -17,6 +17,7 @@ import { fetchWorkTypes } from "./HomePage.api";
 import type {
   CreateJournalRecordPayload,
   JournalRecordResponse,
+  UpdateJournalRecordPayload,
   WorkTypeResponse,
 } from "./HomePage.types";
 import "./WorkJournalEntryForm.css";
@@ -36,6 +37,8 @@ interface WorkJournalEntryFormProps {
   isLoading: boolean;
   onCancel: () => void;
   onSubmit: (payload: CreateJournalRecordPayload) => Promise<void>;
+  onEdit: (payload: UpdateJournalRecordPayload) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }
 
 const initialValues: WorkJournalEntryFormValues = {
@@ -66,6 +69,8 @@ export function WorkJournalEntryForm({
   isSubmitting,
   onCancel,
   onSubmit,
+  onEdit,
+  onDelete,
 }: WorkJournalEntryFormProps) {
   const [workTypes, setWorkTypes] = useState<WorkTypeResponse[]>([]);
   const [isWorkTypesLoading, setIsWorkTypesLoading] = useState(true);
@@ -75,13 +80,21 @@ export function WorkJournalEntryForm({
     handleSubmit,
     reset,
     formState: { errors },
+    getValues,
+    trigger,
+    watch,
   } = useForm<WorkJournalEntryFormValues>({
     defaultValues: initialValues,
   });
+  const workDate = watch("date");
 
   useEffect(() => {
     reset(editData ? mapRecordToFormValues(editData) : initialValues);
   }, [editData, reset]);
+
+  useEffect(() => {
+    void trigger("completedAt");
+  }, [workDate, trigger]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -128,14 +141,20 @@ export function WorkJournalEntryForm({
       return;
     }
 
-    await onSubmit({
+    const payload: CreateJournalRecordPayload = {
       ...values,
       workTypeId: values.workTypeId,
       date: values.date?.format("YYYY-MM-DD") ?? "",
       completedAt: values.completedAt?.format("YYYY-MM-DD") || undefined,
       comment: values.comment || undefined,
-    });
-    reset(initialValues);
+    };
+
+    if (editData)
+      await onEdit({
+        ...payload,
+        id: editData.id,
+      });
+    else await onSubmit(payload);
   });
 
   if (isLoading) {
@@ -231,13 +250,35 @@ export function WorkJournalEntryForm({
         <Controller
           name="completedAt"
           control={control}
+          rules={{
+            validate: (value) => {
+              const date = getValues("date");
+              if (!value || !date) {
+                return true;
+              }
+
+              return (
+                value.isSame(date, "day") ||
+                value.isAfter(date, "day") ||
+                "Дата выполнения не может быть раньше даты работы"
+              );
+            },
+          }}
           render={({ field }) => (
-            <DatePicker
+            <div>
+              <DatePicker
               {...field}
               className="work-journal-entry-form__date"
+              status={errors.completedAt ? "error" : ""}
               format="DD.MM.YYYY"
               placeholder="Дата выполнения"
-            />
+              />
+              {errors.completedAt?.message && (
+                <div className="work-journal-entry-form__error">
+                  {errors.completedAt.message}
+                </div>
+              )}
+            </div>
           )}
         />
       </div>
@@ -252,10 +293,22 @@ export function WorkJournalEntryForm({
         <Button onClick={onCancel}>Отмена</Button>
         {editData ? (
           <>
-            <Button color="orange" variant="solid" loading={isSubmitting}>
-              Изменить
+            <Button
+              color="orange"
+              variant="solid"
+              loading={isSubmitting}
+              htmlType="submit"
+            >
+              Сохранить изменения
             </Button>
-            <Button color="danger" variant="solid" loading={isSubmitting}>
+            <Button
+              color="danger"
+              variant="solid"
+              loading={isSubmitting}
+              onClick={async () => {
+                await onDelete(editData.id.toString());
+              }}
+            >
               Удалить
             </Button>
           </>

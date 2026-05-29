@@ -20,6 +20,7 @@
 .mainLayoutBody {
   flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
   width: 100%;
   max-width: 1920px;
   margin-inline: auto;
@@ -47,7 +48,27 @@
     padding-inline: 0;
   }
 
+  .headerStyle .ant-typography {
+    line-height: 56px;
+    font-size: 32px;
+  }
+
   .contentStyle {
     overflow-y: visible;
+  }
+}
+
+@media (max-width: 480px) {
+  .headerStyle .ant-typography {
+    line-height: 48px;
+    font-size: 24px;
+  }
+
+  .mainLayoutBody {
+    padding-inline: var(--ant-padding-sm, 12px);
+  }
+
+  .footerStyle {
+    padding-inline: var(--ant-padding-sm, 12px);
   }
 }

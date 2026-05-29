@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import type { TableProps } from "antd";
@@ -19,13 +19,17 @@ import {
 } from "antd";
 import {
   createJournalRecord,
+  deleteJournalRecord,
+  editJournalRecord,
   fetchJournalRecords,
   fetchWorkById,
+  fetchWorkJournalStat,
 } from "./HomePage.api";
 import type {
   CreateJournalRecordPayload,
   DataType,
   JournalRecordResponse,
+  UpdateJournalRecordPayload,
 } from "./HomePage.types";
 import { WorkJournalEntryForm } from "./WorkJournalEntryForm";
 import "./HomePage.css";
@@ -56,16 +60,13 @@ const mapRecordToDataType = (record: JournalRecordResponse): DataType => ({
 const getSortOrder = (
   sorter: Parameters<NonNullable<TableProps<DataType>["onChange"]>>[2],
 ) => {
-  if (Array.isArray(sorter)) {
-    return {
-      sortField: sorter[0]?.field?.toString(),
-      sortOrder: sorter[0]?.order ?? undefined,
-    };
-  }
+  const activeSorter = Array.isArray(sorter) ? sorter[0] : sorter;
 
   return {
-    sortField: sorter.field?.toString(),
-    sortOrder: sorter.order ?? undefined,
+    sortField:
+      activeSorter?.columnKey?.toString() ??
+      activeSorter?.field?.toString(),
+    sortOrder: activeSorter?.order ?? undefined,
   };
 };
 
@@ -79,21 +80,39 @@ export function HomePage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorStatistic, setErrorStatistic] = useState<string | null>(null);
+  const [isStatisticLoading, setIsStatisticLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editData, setEditData] = useState<JournalRecordResponse | undefined>();
   const [isLoadingWork, setIsLoadingWork] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [completedWorks, setCompletedWorks] = useState(0);
+  const [notCompletedWorks, setNotCompletedWorks] = useState(0);
 
-  const journalStats = useMemo(() => {
-    const today = dayjs().format("DD.MM.YYYY");
+  const loadJournalStats = useCallback((signal?: AbortSignal) => {
+    fetchWorkJournalStat(signal)
+      .then(({ data }) => {
+        setCompletedWorks(data.completedWorks);
+        setNotCompletedWorks(data.notCompletedWorks);
+        setErrorStatistic(null);
+      })
+      .catch((requestError) => {
+        if (axios.isCancel(requestError)) {
+          return;
+        }
 
-    return {
-      completedToday: dataSource.filter(
-        (record) => record.completedAt === today,
-      ).length,
-      remaining: dataSource.filter((record) => !record.isCompleted).length,
-    };
-  }, [dataSource]);
+        setErrorStatistic(
+          requestError instanceof Error
+            ? requestError.message
+            : "Не удалось загрузить статистику журнала",
+        );
+      })
+      .finally(() => {
+        if (!signal?.aborted) {
+          setIsStatisticLoading(false);
+        }
+      });
+  }, []);
 
   const columns: TableProps<DataType>["columns"] = [
     {
@@ -201,13 +220,16 @@ export function HomePage() {
 
   useEffect(() => {
     const controller = new AbortController();
+    const controllerStatistic = new AbortController();
 
     loadJournalRecords(controller.signal);
+    loadJournalStats(controllerStatistic.signal);
 
     return () => {
       controller.abort();
+      controllerStatistic.abort();
     };
-  }, [loadJournalRecords]);
+  }, [loadJournalRecords, loadJournalStats]);
 
   const handleEditWorkModal = async (id: string) => {
     setIsModalOpen(true);
@@ -227,7 +249,6 @@ export function HomePage() {
     sorter,
   ) => {
     const nextSort = getSortOrder(sorter);
-
     setLoading(true);
     setError(null);
     setPage(pagination.current ?? 1);
@@ -244,12 +265,13 @@ export function HomePage() {
 
   const handleCreateRecord = async (payload: CreateJournalRecordPayload) => {
     setIsCreating(true);
-
     try {
       await createJournalRecord(payload);
       setIsModalOpen(false);
       setLoading(true);
+      setIsStatisticLoading(true);
       loadJournalRecords();
+      loadJournalStats();
       messageApi.success("Запись создана");
     } catch (requestError) {
       messageApi.error(
@@ -257,6 +279,51 @@ export function HomePage() {
           ? requestError.message
           : "Не удалось создать запись",
       );
+      throw requestError;
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleEditRecord = async (payload: UpdateJournalRecordPayload) => {
+    setIsCreating(true);
+    try {
+      await editJournalRecord(payload);
+      setIsModalOpen(false);
+      setLoading(true);
+      setIsStatisticLoading(true);
+      loadJournalRecords();
+      loadJournalStats();
+      messageApi.success("Запись изменена");
+    } catch (requestError) {
+      messageApi.error(
+        requestError instanceof Error
+          ? requestError.message
+          : "Не удалось изменить запись",
+      );
+      throw requestError;
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleDeleteRecord = async (id: string) => {
+    setIsCreating(true);
+    try {
+      await deleteJournalRecord(id);
+      setIsModalOpen(false);
+      setLoading(true);
+      setIsStatisticLoading(true);
+      loadJournalRecords();
+      loadJournalStats();
+      messageApi.success("Запись удалена");
+    } catch (requestError) {
+      messageApi.error(
+        requestError instanceof Error
+          ? requestError.message
+          : "Не удалось удалить запись",
+      );
+      throw requestError;
     } finally {
       setIsCreating(false);
     }
@@ -266,22 +333,32 @@ export function HomePage() {
     <div className="home-page">
       {contextHolder}
       <Row gutter={[16, 16]} className="home-page__stats">
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic
-              title="Выполнено сегодня"
-              value={journalStats.completedToday}
+        {errorStatistic ? (
+          <Col xs={24} sm={12}>
+            <Alert
+              type="error"
+              title="Ошибка загрузки статистики"
+              description={errorStatistic}
+              showIcon
             />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic
-              title="Осталось выполнить задач"
-              value={journalStats.remaining}
-            />
-          </Card>
-        </Col>
+          </Col>
+        ) : (
+          <>
+            <Col xs={24} sm={12}>
+              <Card loading={isStatisticLoading}>
+                <Statistic title="Выполнено сегодня" value={completedWorks} />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Card loading={isStatisticLoading}>
+                <Statistic
+                  title="Осталось выполнить задач"
+                  value={notCompletedWorks}
+                />
+              </Card>
+            </Col>
+          </>
+        )}
       </Row>
       <div className="home-page__toolbar">
         <Space size={16}>
@@ -319,6 +396,7 @@ export function HomePage() {
       <Table
         dataSource={dataSource}
         columns={columns}
+        scroll={{ x: 1080 }}
         loading={loading}
         onChange={handleTableChange}
         pagination={{
@@ -334,7 +412,11 @@ export function HomePage() {
         footer={null}
         onCancel={() => {
           setIsModalOpen(false);
-          setEditData(undefined);
+        }}
+        afterOpenChange={(open) => {
+          if (!open) {
+            setEditData(undefined);
+          }
         }}
         destroyOnHidden
       >
@@ -344,9 +426,10 @@ export function HomePage() {
           isSubmitting={isCreating}
           onCancel={() => {
             setIsModalOpen(false);
-            setEditData(undefined);
           }}
           onSubmit={handleCreateRecord}
+          onEdit={handleEditRecord}
+          onDelete={handleDeleteRecord}
         />
       </Modal>
     </div>

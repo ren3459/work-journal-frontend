@@ -15,6 +15,15 @@
   width: 100%;
 }
 
+.work-journal-entry-form .ant-space-compact {
+  width: 100%;
+}
+
+.work-journal-entry-form .ant-space-compact .ant-input-number,
+.work-journal-entry-form .ant-space-compact .ant-input {
+  min-width: 0;
+}
+
 .work-journal-entry-form__dates {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -24,11 +33,40 @@
 .work-journal-entry-form__actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: var(--ant-padding-sm, 12px);
+}
+
+.work-journal-entry-form__error {
+  color: var(--ant-color-error, #ff4d4f);
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 4px;
 }
 
 @media (max-width: 768px) {
   .work-journal-entry-form__dates {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .work-journal-entry-form .ant-space-compact {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .work-journal-entry-form .ant-space-compact .ant-input-number,
+  .work-journal-entry-form .ant-space-compact .ant-input {
+    width: 100%;
+  }
+
+  .work-journal-entry-form__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .work-journal-entry-form__actions .ant-btn {
+    width: 100%;
   }
 }

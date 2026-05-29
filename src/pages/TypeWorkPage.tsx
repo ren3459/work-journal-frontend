@@ -178,6 +178,7 @@ export function TypeWorkPage() {
       <Table
         dataSource={pagedDataSource}
         columns={columns}
+        scroll={{ x: 520 }}
         loading={loading}
         onChange={handleTableChange}
         pagination={{

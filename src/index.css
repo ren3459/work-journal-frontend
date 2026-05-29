@@ -26,4 +26,21 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Add other global resets here if needed by the app */
+.ant-modal {
+  max-width: calc(100vw - 24px);
+}
+
+@media (max-width: 480px) {
+  .ant-modal {
+    top: 12px;
+    margin: 0 auto;
+  }
+
+  .ant-modal-content {
+    padding: var(--ant-padding, 16px);
+  }
+
+  .ant-table-pagination.ant-pagination {
+    justify-content: center;
+  }
+}

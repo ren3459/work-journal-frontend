@@ -16,6 +16,11 @@ export interface WorkTypeResponse {
   createdAt: string;
 }
 
+export interface WorkJournalStatistic {
+  completedWorks: number;
+  notCompletedWorks: number;
+}
+
 export interface JournalRecordResponse {
   id: number;
   date: string;
@@ -45,3 +50,7 @@ export interface CreateJournalRecordPayload {
   completedAt?: string;
   comment?: string;
 }
+
+export type UpdateJournalRecordPayload = CreateJournalRecordPayload & {
+  id: number;
+};

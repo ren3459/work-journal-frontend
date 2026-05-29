@@ -1,73 +1,44 @@
-# React + TypeScript + Vite
+# Work Journal Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Фронтенд приложения для ведения журнала работ: список записей, создание и редактирование работ, справочник типов работ.
 
-Currently, two official plugins are available:
+## Стек
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Vite** — инструмент для быстрого запуска проекта в режиме разработки и сборки приложения.
+- **Ant Design** — набор готовых компонентов интерфейса (таблицы, формы, кнопки, модальные окна), который ускоряет разработку.
+- **React Hook Form** — библиотека для удобной работы с формами и проверки введенных данных.
+- **Axios** — используется для отправки запросов к backend API и получения данных.
+- **Dayjs** — библиотека для работы с датами и их отображения в удобном формате.
 
-## React Compiler
+## Запуск
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Установить зависимости
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Настроить API
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+По умолчанию frontend отправляет запросы на `/api`, а Vite проксирует их на `http://127.0.0.1:3000`.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Если backend запущен на другом адресе, создай файл `.env` в папке `work-journal-frontend`:
+
+```env
+VITE_API_URL=/api
+VITE_API_PROXY_TARGET=http://127.0.0.1:3000
 ```
+
+### 4. Запустить frontend в режиме разработки
+
+```bash
+npm run dev
+```
+
+## Проверка сборки
+
+```bash
+npm run build
+```
+
+Команда запускает TypeScript-проверку и production-сборку Vite.

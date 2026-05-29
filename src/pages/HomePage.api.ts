@@ -3,6 +3,8 @@ import type {
   CreateJournalRecordPayload,
   JournalRecordResponse,
   JournalRecordsResponse,
+  UpdateJournalRecordPayload,
+  WorkJournalStatistic,
   WorkTypeResponse,
 } from "./HomePage.types";
 
@@ -27,15 +29,28 @@ export const fetchJournalRecords = (
     signal,
   });
 
-//jornal url
+//journal url
 export const createJournalRecord = (payload: CreateJournalRecordPayload) =>
   axios.post<JournalRecordResponse>(workJournalApiUrl, payload);
+
+export const editJournalRecord = (payload: UpdateJournalRecordPayload) =>
+  axios.patch<JournalRecordResponse>(
+    workJournalApiUrl + `/${payload.id}`,
+    payload,
+  );
+
+export const deleteJournalRecord = (id: string) =>
+  axios.delete<JournalRecordResponse>(workJournalApiUrl + `/${id}`);
 
 export const fetchWorkById = (id: string, signal?: AbortSignal) =>
   axios.get<JournalRecordResponse>(workJournalApiUrl + `/${id}`, {
     signal,
   });
 
+export const fetchWorkJournalStat = (signal?: AbortSignal) =>
+  axios.get<WorkJournalStatistic>(workJournalApiUrl + "/statistic", {
+    signal,
+  });
 //types url
 export const fetchWorkTypes = (signal?: AbortSignal) =>
   axios.get<WorkTypeResponse[]>(workTypesApiUrl, {
