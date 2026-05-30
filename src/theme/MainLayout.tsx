@@ -1,4 +1,3 @@
-// layouts/MainLayout.tsx
 import { Outlet } from "react-router-dom";
 import { ConfigProvider, Layout, theme } from "antd";
 import "./MainLayout.css";
@@ -8,7 +7,6 @@ const { Title } = Typography;
 
 export function MainLayout() {
   const { Header, Footer, Content } = Layout;
-  // const configProps = glassTheme();
   const configProps = { theme: { algorithm: theme.defaultAlgorithm } };
   return (
     <ConfigProvider {...configProps}>

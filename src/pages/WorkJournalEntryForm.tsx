@@ -224,14 +224,12 @@ export function WorkJournalEntryForm({
           control={control}
           rules={{ min: 0 }}
           render={({ field }) => (
-            <>
-              <InputNumber
-                {...field}
-                className="work-journal-entry-form__volume"
-                min={0}
-                placeholder="Объем"
-              />
-            </>
+            <InputNumber
+              {...field}
+              className="work-journal-entry-form__volume"
+              min={0}
+              placeholder="Объем"
+            />
           )}
         />
         <Controller
@@ -239,13 +237,11 @@ export function WorkJournalEntryForm({
           control={control}
           rules={{ required: "Укажите единицу измерения" }}
           render={({ field }) => (
-            <>
-              <Input
-                {...field}
-                status={errors.unit ? "error" : ""}
-                placeholder="Ед. изм."
-              />
-            </>
+            <Input
+              {...field}
+              status={errors.unit ? "error" : ""}
+              placeholder="Ед. изм."
+            />
           )}
         />
       </Space.Compact>

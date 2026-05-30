@@ -1,0 +1,10 @@
+.approved__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ant-padding-sm, 12px);
+}
+
+.approved__content {
+  width: 100%;
+  min-width: 0;
+}

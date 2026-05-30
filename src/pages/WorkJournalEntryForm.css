@@ -44,6 +44,10 @@
   margin-top: -8px;
 }
 
+.work-journal-entry-form__date+.work-journal-entry-form__error {
+  margin-top: 0;
+}
+
 @media (max-width: 768px) {
   .work-journal-entry-form__dates {
     grid-template-columns: 1fr;
