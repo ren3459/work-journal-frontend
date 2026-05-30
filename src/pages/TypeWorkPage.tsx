@@ -5,8 +5,6 @@ import type { TableProps } from "antd";
 import {
   Alert,
   Button,
-  Form,
-  Input,
   Modal,
   Select,
   Space,
@@ -16,6 +14,8 @@ import {
 import Title from "antd/es/typography/Title";
 import { createWorkType, fetchWorkTypes } from "./HomePage.api";
 import type { WorkTypeResponse } from "./HomePage.types";
+import { TypeWorkForm } from "./TypeWorkForm";
+import type { CreateWorkTypeFormValues } from "./TypeWorkForm";
 import "./TypeWorkPage.css";
 
 const DEFAULT_PAGE_SIZE = 5;
@@ -26,10 +26,6 @@ interface WorkTypeTableData {
   id: number;
   name: string;
   createdAt: string;
-}
-
-interface CreateWorkTypeFormValues {
-  name: string;
 }
 
 const columns: TableProps<WorkTypeTableData>["columns"] = [
@@ -55,7 +51,6 @@ const mapWorkTypeToTableData = (
 });
 
 export function TypeWorkPage() {
-  const [form] = Form.useForm<CreateWorkTypeFormValues>();
   const [messageApi, contextHolder] = message.useMessage();
   const [dataSource, setDataSource] = useState<WorkTypeTableData[]>([]);
   const [page, setPage] = useState(1);
@@ -122,7 +117,6 @@ export function TypeWorkPage() {
 
     try {
       await createWorkType(values.name.trim());
-      form.resetFields();
       setIsCreateModalOpen(false);
       setLoading(true);
       loadWorkTypes();
@@ -195,32 +189,11 @@ export function TypeWorkPage() {
         onCancel={() => setIsCreateModalOpen(false)}
         destroyOnHidden
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleCreateWorkType}
-          disabled={isCreating}
-        >
-          <Form.Item
-            label="Название"
-            name="name"
-            rules={[
-              {
-                required: true,
-                whitespace: true,
-                message: "Введите название типа работы",
-              },
-            ]}
-          >
-            <Input placeholder="Тип работы" />
-          </Form.Item>
-          <div className="type-work-page__modal-actions">
-            <Button onClick={() => setIsCreateModalOpen(false)}>Отмена</Button>
-            <Button type="primary" htmlType="submit" loading={isCreating}>
-              Создать
-            </Button>
-          </div>
-        </Form>
+        <TypeWorkForm
+          isSubmitting={isCreating}
+          onCancel={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateWorkType}
+        />
       </Modal>
     </div>
   );

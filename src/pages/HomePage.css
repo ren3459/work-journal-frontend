@@ -17,6 +17,10 @@
   min-width: 0;
 }
 
+.action-button:not(:last-child) {
+  margin-right: 16px;
+}
+
 .home-page__stats {
   width: 100%;
   min-width: 0;

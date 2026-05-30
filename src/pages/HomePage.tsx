@@ -36,8 +36,10 @@ import "./HomePage.css";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
-  InfoOutlined,
+  DeleteOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
+import { ApproveDelete } from "./ApproveDelete";
 
 const DEFAULT_PAGE_SIZE = 5;
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
@@ -64,8 +66,7 @@ const getSortOrder = (
 
   return {
     sortField:
-      activeSorter?.columnKey?.toString() ??
-      activeSorter?.field?.toString(),
+      activeSorter?.columnKey?.toString() ?? activeSorter?.field?.toString(),
     sortOrder: activeSorter?.order ?? undefined,
   };
 };
@@ -81,8 +82,10 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [errorStatistic, setErrorStatistic] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isStatisticLoading, setIsStatisticLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalDeleteOpen, setIsModalDeleteOpen] = useState(false);
   const [editData, setEditData] = useState<JournalRecordResponse | undefined>();
   const [isLoadingWork, setIsLoadingWork] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -120,14 +123,30 @@ export function HomePage() {
       dataIndex: "actions",
       key: "actions",
       render: (_: unknown, record: DataType) => (
-        <Tooltip title="Открыть запись">
-          <Button
-            type="default"
-            shape="circle"
-            icon={<InfoOutlined />}
-            onClick={() => handleEditWorkModal(record.key)}
-          />
-        </Tooltip>
+        <>
+          <Tooltip title="Открыть запись">
+            <Button
+              className="action-button"
+              type="primary"
+              shape="circle"
+              icon={<EditOutlined />}
+              onClick={() => handleEditWorkModal(record.key)}
+            />
+          </Tooltip>
+          <Tooltip title="Удалить запись">
+            <Button
+              type="default"
+              shape="circle"
+              variant="solid"
+              color="danger"
+              icon={<DeleteOutlined />}
+              onClick={() => {
+                setIsModalDeleteOpen(true);
+                setDeleteId(record.key);
+              }}
+            />
+          </Tooltip>
+        </>
       ),
     },
     {
@@ -311,7 +330,6 @@ export function HomePage() {
     setIsCreating(true);
     try {
       await deleteJournalRecord(id);
-      setIsModalOpen(false);
       setLoading(true);
       setIsStatisticLoading(true);
       loadJournalRecords();
@@ -327,6 +345,16 @@ export function HomePage() {
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const handleApproveDelete = async () => {
+    if (!deleteId) {
+      return;
+    }
+
+    await handleDeleteRecord(deleteId);
+    setIsModalDeleteOpen(false);
+    setDeleteId(null);
   };
 
   return (
@@ -407,7 +435,7 @@ export function HomePage() {
         }}
       />
       <Modal
-        title="Создание записи"
+        title={editData ? "Редактирование записи" : "Создание записи"}
         open={isModalOpen}
         footer={null}
         onCancel={() => {
@@ -429,7 +457,22 @@ export function HomePage() {
           }}
           onSubmit={handleCreateRecord}
           onEdit={handleEditRecord}
-          onDelete={handleDeleteRecord}
+        />
+      </Modal>
+
+      <Modal
+        title="Подтвердите удаление"
+        open={isModalDeleteOpen}
+        footer={null}
+        destroyOnHidden
+      >
+        <ApproveDelete
+          isSubmitting={isCreating}
+          onSubmit={handleApproveDelete}
+          onCancel={() => {
+            setIsModalDeleteOpen(false);
+            setDeleteId(null);
+          }}
         />
       </Modal>
     </div>

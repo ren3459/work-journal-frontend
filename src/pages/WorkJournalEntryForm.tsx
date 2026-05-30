@@ -38,7 +38,6 @@ interface WorkJournalEntryFormProps {
   onCancel: () => void;
   onSubmit: (payload: CreateJournalRecordPayload) => Promise<void>;
   onEdit: (payload: UpdateJournalRecordPayload) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
 }
 
 const initialValues: WorkJournalEntryFormValues = {
@@ -70,7 +69,6 @@ export function WorkJournalEntryForm({
   onCancel,
   onSubmit,
   onEdit,
-  onDelete,
 }: WorkJournalEntryFormProps) {
   const [workTypes, setWorkTypes] = useState<WorkTypeResponse[]>([]);
   const [isWorkTypesLoading, setIsWorkTypesLoading] = useState(true);
@@ -182,15 +180,23 @@ export function WorkJournalEntryForm({
           validate: (value) => Boolean(value) || "Укажите тип работы",
         }}
         render={({ field }) => (
-          <Select
-            {...field}
-            showSearch={{ optionFilterProp: "label" }}
-            loading={isWorkTypesLoading}
-            disabled={isWorkTypesLoading || Boolean(workTypesError)}
-            status={errors.workTypeId ? "error" : ""}
-            placeholder="Тип работы"
-            options={workTypeOptions}
-          />
+          <>
+            <Select
+              {...field}
+              autoFocus
+              showSearch={{ optionFilterProp: "label" }}
+              loading={isWorkTypesLoading}
+              disabled={isWorkTypesLoading || Boolean(workTypesError)}
+              status={errors.workTypeId ? "error" : ""}
+              placeholder="Тип работы"
+              options={workTypeOptions}
+            />
+            {errors.workTypeId?.message && (
+              <div className="work-journal-entry-form__error">
+                {errors.workTypeId.message}
+              </div>
+            )}
+          </>
         )}
       />
       <Controller
@@ -198,11 +204,18 @@ export function WorkJournalEntryForm({
         control={control}
         rules={{ required: "Укажите исполнителя" }}
         render={({ field }) => (
-          <Input
-            {...field}
-            status={errors.executorName ? "error" : ""}
-            placeholder="Исполнитель"
-          />
+          <>
+            <Input
+              {...field}
+              status={errors.executorName ? "error" : ""}
+              placeholder="Исполнитель"
+            />
+            {errors.executorName?.message && (
+              <div className="work-journal-entry-form__error">
+                {errors.executorName.message}
+              </div>
+            )}
+          </>
         )}
       />
       <Space.Compact block>
@@ -211,40 +224,64 @@ export function WorkJournalEntryForm({
           control={control}
           rules={{ min: 0 }}
           render={({ field }) => (
-            <InputNumber
-              {...field}
-              className="work-journal-entry-form__volume"
-              min={0}
-              placeholder="Объем"
-            />
+            <>
+              <InputNumber
+                {...field}
+                className="work-journal-entry-form__volume"
+                min={0}
+                placeholder="Объем"
+              />
+            </>
           )}
         />
         <Controller
           name="unit"
           control={control}
-          rules={{ required: "Укажите единицу" }}
+          rules={{ required: "Укажите единицу измерения" }}
           render={({ field }) => (
-            <Input
-              {...field}
-              status={errors.unit ? "error" : ""}
-              placeholder="Ед. изм."
-            />
+            <>
+              <Input
+                {...field}
+                status={errors.unit ? "error" : ""}
+                placeholder="Ед. изм."
+              />
+            </>
           )}
         />
       </Space.Compact>
+      <div>
+        {errors.volume?.message && (
+          <div className="work-journal-entry-form__error">
+            {errors.volume.message}
+          </div>
+        )}
+        {errors.unit?.message && (
+          <div className="work-journal-entry-form__error">
+            {errors.unit.message}
+          </div>
+        )}
+      </div>
       <div className="work-journal-entry-form__dates">
         <Controller
           name="date"
           control={control}
           rules={{ required: "Укажите дату работы" }}
           render={({ field }) => (
-            <DatePicker
-              {...field}
-              className="work-journal-entry-form__date"
-              status={errors.date ? "error" : ""}
-              format="DD.MM.YYYY"
-              placeholder="Дата работы"
-            />
+            <>
+              <DatePicker
+                {...field}
+                className="work-journal-entry-form__date"
+                status={errors.date ? "error" : ""}
+                format="DD.MM.YYYY"
+                placeholder="Дата работы"
+              />
+
+              {errors.date?.message && (
+                <div className="work-journal-entry-form__error">
+                  {errors.date.message}
+                </div>
+              )}
+            </>
           )}
         />
         <Controller
@@ -267,11 +304,11 @@ export function WorkJournalEntryForm({
           render={({ field }) => (
             <div>
               <DatePicker
-              {...field}
-              className="work-journal-entry-form__date"
-              status={errors.completedAt ? "error" : ""}
-              format="DD.MM.YYYY"
-              placeholder="Дата выполнения"
+                {...field}
+                className="work-journal-entry-form__date"
+                status={errors.completedAt ? "error" : ""}
+                format="DD.MM.YYYY"
+                placeholder="Дата выполнения"
               />
               {errors.completedAt?.message && (
                 <div className="work-journal-entry-form__error">
@@ -286,7 +323,15 @@ export function WorkJournalEntryForm({
         name="comment"
         control={control}
         render={({ field }) => (
-          <Input.TextArea {...field} placeholder="Комментарий" rows={3} />
+          <>
+            <Input.TextArea {...field} placeholder="Комментарий" rows={3} />
+
+            {errors.comment?.message && (
+              <div className="work-journal-entry-form__error">
+                {errors.comment.message}
+              </div>
+            )}
+          </>
         )}
       />
       <div className="work-journal-entry-form__actions">
@@ -300,16 +345,6 @@ export function WorkJournalEntryForm({
               htmlType="submit"
             >
               Сохранить изменения
-            </Button>
-            <Button
-              color="danger"
-              variant="solid"
-              loading={isSubmitting}
-              onClick={async () => {
-                await onDelete(editData.id.toString());
-              }}
-            >
-              Удалить
             </Button>
           </>
         ) : (
